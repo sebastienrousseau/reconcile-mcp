@@ -135,15 +135,13 @@ Then call `reconcile(expected, observed)`.
 
 ## Tools
 
-| Tool | What it does |
-| --- | --- |
-| `reconcile` | Match expected payments against observed entries; full explainable report. |
-| `explain_match` | Score a single expected/observed pair with a per-signal breakdown (tuning aid). |
-| `normalize_pain001` | Adapt parsed `pain.001` output into canonical *expected* records. |
-| `normalize_camt053` | Adapt parsed `camt.053` output into canonical *observed* records. |
-| `list_sandbox_scenarios` | List the built-in test-mode scenarios and magic references. |
-| `load_sandbox_scenario` | Return one scenario's expected/observed inputs to inspect or edit. |
-| `run_sandbox_scenario` | Load a scenario and reconcile it in one call — the fastest first run. |
+- `reconcile` — Match expected payments against observed entries; full explainable report.
+- `explain_match` — Score a single expected/observed pair with a per-signal breakdown (tuning aid).
+- `normalize_pain001` — Adapt parsed `pain.001` output into canonical *expected* records.
+- `normalize_camt053` — Adapt parsed `camt.053` output into canonical *observed* records.
+- `list_sandbox_scenarios` — List the built-in test-mode scenarios and magic references.
+- `load_sandbox_scenario` — Return one scenario's expected/observed inputs to inspect or edit.
+- `run_sandbox_scenario` — Load a scenario and reconcile it in one call — the fastest first run.
 
 ## How matching works
 
