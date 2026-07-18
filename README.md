@@ -24,9 +24,9 @@ signals (reference, amount, date, counterparty) that drove it.
 
 ## The ISO 20022 MCP Suite
 
-`reconcile-mcp` is the **reconciliation workflow** of five coordinated,
+`reconcile-mcp` is the **reconciliation workflow** of eight coordinated,
 vendor-neutral MCP servers that together cover the ISO 20022 bank-statement
-workflow and the November 2026 structured-address cutover — statement depth,
+workflow and the November 2026 structured-address cutover, plus a high-level orchestration layer — readiness scoring, clearing-profile linting, and audit evidence — statement depth,
 whole-catalogue routing, reconciliation, multi-format ingestion, and address
 remediation. Dependency ranges are kept aligned across the suite,
 so the servers co-install cleanly in a single Python environment: start with
@@ -39,6 +39,9 @@ one, add the rest as your workflow grows.
 | [`reconcile-mcp`](#install) | Matches expected `pain.001` payments against observed `camt.053` entries — exact, partial, one-to-many, many-to-one, every match scored and explained | 7 MCP tools | `pip install reconcile-mcp` | You need explainable statement/payment reconciliation — **this package** |
 | [`bankstatementparser-mcp`][bsp-mcp] | Multi-format statement ingestion: ISO 20022 CAMT.053 and pain.001, SWIFT MT940, OFX/QFX, CSV | 5 MCP tools · 1 prompt · 1 resource | `pip install bankstatementparser-mcp` | Your statements arrive in mixed or legacy formats |
 | [`structured-address-fix-mcp`][saf-mcp] | ISO 20022 postal-address classification, assessment & remediation for the November 2026 structured-address cutover (`pacs.008` / `pain.001` debtor & creditor addresses) | 9 MCP tools | `pip install structured-address-fix-mcp` | You need debtor/creditor addresses cliff-ready ahead of 14 Nov 2026 |
+| [`iso20022-readiness-suite-mcp`](https://github.com/sebastienrousseau/iso20022-readiness-suite-mcp) | Orchestration gateway: detect → structurally validate → clearing-profile lint → readiness score, plus automated remediation and `pacs.002` bank-response simulation — a meta-client over the foundational servers | 4 MCP tools | `pip install iso20022-readiness-suite-mcp` | You want one high-level readiness / orchestration entry point over the suite |
+| [`iso20022-bank-profile-mcp`](https://github.com/sebastienrousseau/iso20022-bank-profile-mcp) | Manages, validates and serves bank-specific clearing profiles / rule packs (CBPR+, SEPA_Instant, FedNow, Generic); premium rule-pack entitlement gating | 4 MCP tools | `pip install iso20022-bank-profile-mcp` | You lint payments against your own institution's market practice |
+| [`iso20022-evidence-pack-mcp`](https://github.com/sebastienrousseau/iso20022-evidence-pack-mcp) | Compiles readiness findings, remediation diffs and simulated responses into a sealed, Ed25519-signable audit evidence pack | 6 MCP tools | `pip install iso20022-evidence-pack-mcp` | You need tamper-evident audit / certification artifacts |
 
 In one line each: **`camt053-mcp`** is the bank-statement flagship (deepest
 camt.05x surface, stdio + authenticated streamable HTTP);
