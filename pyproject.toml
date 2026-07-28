@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "reconcile-mcp"
-version = "0.0.1"
+version = "0.0.2"
 description = "Model Context Protocol (MCP) server that reconciles ISO 20022 camt.053 bank-statement entries against expected pain.001 payments -- explainable exact, partial, one-to-many and many-to-one matching."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"

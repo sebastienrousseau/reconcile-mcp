@@ -15,4 +15,4 @@
 
 """reconcile-mcp: a Model Context Protocol server for ISO 20022 reconciliation."""
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
