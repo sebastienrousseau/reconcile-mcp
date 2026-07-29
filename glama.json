@@ -1,0 +1,36 @@
+{
+  "$schema": "https://glama.ai/api/mcp/v1/schemas/glama.json",
+  "maintainers": [
+    "sebastienrousseau"
+  ],
+  "title": "reconcile-mcp",
+  "display_name": "Reconcile MCP",
+  "description": "Model Context Protocol (MCP) server that reconciles ISO 20022 camt.053 bank-statement entries against expected pain.001 payments -- explainable exact, partial, one-to-many and many-to-one matching.",
+  "version": "0.0.2",
+  "repository": "https://github.com/sebastienrousseau/reconcile-mcp",
+  "homepage": "https://reconcile-mcp.com",
+  "license": "Apache-2.0",
+  "language": "Python",
+  "runtime": "python",
+  "categories": [
+    "finance"
+  ],
+  "tags": [
+    "iso-20022",
+    "reconciliation",
+    "camt053",
+    "pain001",
+    "mcp",
+    "payments",
+    "treasury",
+    "fintech"
+  ],
+  "mcpServers": {
+    "reconcile": {
+      "command": "reconcile-mcp"
+    }
+  },
+  "installation": {
+    "pip": "pip install reconcile-mcp"
+  }
+}
