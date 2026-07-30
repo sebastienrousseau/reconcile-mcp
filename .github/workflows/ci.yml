@@ -26,12 +26,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Installs this package editable (so coverage collects); the only
-      # runtime dependency, `mcp`, resolves from PyPI.
+      # Installs this package editable (so coverage collects) with the `ilp`
+      # extra so scipy is present and the many-to-many ILP solve path (and its
+      # 100% coverage) is exercised; `mcp` and `rapidfuzz` resolve from PyPI.
       - name: Install this package
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e ".[ilp]"
           pip install pytest pytest-cov
 
       # The pyproject addopts enforce --cov-branch --cov-fail-under=100, so a
