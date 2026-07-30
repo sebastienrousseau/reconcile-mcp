@@ -239,6 +239,141 @@ def run_sandbox_scenario(
         return {"error": str(exc)}
 
 
+@server.tool(
+    title="Match names (probabilistic)",
+    annotations=_PURE_READ,
+    description=(
+        "Score two counterparty names with Jaro-Winkler similarity and report "
+        "whether they match at a given threshold. Tolerant of legal-suffix "
+        "drift, e.g. 'ACME Corp' vs 'ACME Corporation Inc'."
+    ),
+)
+def match_names_probabilistic(
+    name_a: Annotated[str, Field(description="First counterparty name.")],
+    name_b: Annotated[str, Field(description="Second counterparty name.")],
+    threshold: Annotated[
+        float,
+        Field(
+            description=(
+                "Similarity in [0, 1] at or above which the pair is a match."
+            )
+        ),
+    ] = 0.85,
+) -> dict[str, Any]:
+    """Score two names by Jaro-Winkler similarity and flag a match.
+
+    Args:
+        name_a: first counterparty name.
+        name_b: second counterparty name.
+        threshold: match cutoff in ``[0, 1]``.
+
+    Returns:
+        ``{"similarity_score": float, "is_match": bool}``, or ``{"error": ...}``
+        if ``threshold`` is out of range.
+    """
+    try:
+        return engine.match_names_probabilistic(name_a, name_b, threshold)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@server.tool(
+    title="Match amounts (FX drift)",
+    annotations=_PURE_READ,
+    description=(
+        "Compare two amounts in different currencies, converting one via a "
+        "supplied FX rate and matching if the percentage difference is within "
+        "tolerance. Uses exact decimal arithmetic."
+    ),
+)
+def match_amounts_with_fx_drift(
+    amount_a: Annotated[
+        float, Field(description="Amount denominated in currency_a.")
+    ],
+    currency_a: Annotated[
+        str, Field(description="ISO 4217 code of amount_a.")
+    ],
+    amount_b: Annotated[
+        float, Field(description="Amount denominated in currency_b.")
+    ],
+    currency_b: Annotated[
+        str, Field(description="ISO 4217 code of amount_b.")
+    ],
+    fx_rate: Annotated[
+        float,
+        Field(
+            description=(
+                "Units of currency_a per one unit of currency_b (e.g. an "
+                "EUR/USD quote of 1.08 is USD per EUR)."
+            )
+        ),
+    ],
+    tolerance_pct: Annotated[
+        float,
+        Field(
+            description="Max percentage difference still counted as a match."
+        ),
+    ] = 1.0,
+) -> dict[str, Any]:
+    """Compare two cross-currency amounts, tolerating small FX drift.
+
+    Args:
+        amount_a: amount in ``currency_a``.
+        currency_a: ISO 4217 code of ``amount_a``.
+        amount_b: amount in ``currency_b`` to compare against.
+        currency_b: ISO 4217 code of ``amount_b``.
+        fx_rate: units of ``currency_a`` per one unit of ``currency_b``.
+        tolerance_pct: match tolerance as a percentage.
+
+    Returns:
+        ``{"converted_amount": str, "difference_pct": float, "is_match":
+        bool}``, or ``{"error": ...}`` if ``fx_rate`` is not positive.
+    """
+    try:
+        return engine.match_amounts_with_fx_drift(
+            amount_a,
+            currency_a,
+            amount_b,
+            currency_b,
+            fx_rate,
+            tolerance_pct,
+        )
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
+@server.tool(
+    title="Reconcile many-to-many",
+    annotations=_PURE_READ,
+    description=(
+        "Match each statement/deposit to a disjoint subset of invoices whose "
+        "amounts sum to it (bounded subset-sum solved as an integer program). "
+        "Returns matched groups and the unmatched residuals on each side."
+    ),
+)
+def reconcile_many_to_many(
+    statements: Annotated[
+        list[dict[str, Any]], Field(description=_RECORD_DESC)
+    ],
+    invoices: Annotated[list[dict[str, Any]], Field(description=_RECORD_DESC)],
+) -> dict[str, Any]:
+    """Match statement deposits to invoice subsets via subset-sum ILP.
+
+    Args:
+        statements: canonical deposit records (each needs ``id`` + ``amount``).
+        invoices: canonical invoice records (each needs ``id`` + ``amount``).
+
+    Returns:
+        ``{"matches": [...], "unmatched_statements": [...],
+        "unmatched_invoices": [...]}``; ``{"error": ...}`` if the optional ILP
+        solver is unavailable or a record is malformed.
+    """
+    try:
+        return engine.reconcile_many_to_many(statements, invoices)
+    except ValueError as exc:
+        return {"error": str(exc)}
+
+
 def main() -> None:
     """Run the reconcile MCP server over stdio (the ``reconcile-mcp`` entry)."""
     server.run()
