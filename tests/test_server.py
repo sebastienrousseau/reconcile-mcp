@@ -16,6 +16,7 @@
 """Tests for the reconcile MCP server tool surface."""
 
 import asyncio
+import json
 
 import pytest
 
@@ -104,6 +105,56 @@ def test_run_sandbox_scenario_tool_happy_and_error():
     assert ok["scenario"]["name"] == "clean_match"
     err = srv.run_sandbox_scenario("nope")
     assert "error" in err
+
+
+def test_reconcile_workflow_prompt_registered():
+    names = {p.name for p in srv.server._prompt_manager.list_prompts()}
+    assert "reconcile_workflow" in names
+
+
+def test_reconcile_workflow_prompt_generic_branch():
+    out = srv.reconcile_workflow()
+    assert "normalize_pain001" in out
+    assert "normalize_camt053" in out
+    assert "reconcile" in out
+    assert "explain_match" in out
+    assert "list_sandbox_scenarios" in out
+
+
+def test_reconcile_workflow_prompt_scenario_branch():
+    out = srv.reconcile_workflow("clean_match")
+    assert "run_sandbox_scenario" in out
+    assert "'clean_match'" in out
+    assert "load_sandbox_scenario" in out
+
+
+def test_sandbox_scenarios_resource_registered():
+    uris = {str(r.uri) for r in srv.server._resource_manager.list_resources()}
+    assert "reconcile://sandbox-scenarios" in uris
+
+
+def test_sandbox_scenario_template_registered():
+    templates = {
+        t.uri_template for t in srv.server._resource_manager.list_templates()
+    }
+    assert "reconcile://sandbox/{scenario_id}" in templates
+
+
+def test_sandbox_scenarios_resource_body():
+    out = json.loads(srv.sandbox_scenarios_resource())
+    assert any(s["name"] == "clean_match" for s in out["scenarios"])
+    assert "SANDBOX-EXACT" in out["magic_references"]
+
+
+def test_sandbox_scenario_resource_happy():
+    out = json.loads(srv.sandbox_scenario_resource("clean_match"))
+    assert out["name"] == "clean_match"
+    assert out["expected"] and out["observed"]
+
+
+def test_sandbox_scenario_resource_error():
+    out = json.loads(srv.sandbox_scenario_resource("nope"))
+    assert "error" in out
 
 
 def test_main_runs_server(monkeypatch):
