@@ -45,6 +45,7 @@ Launching the server:
 The server communicates over stdio (FastMCP's default transport).
 """
 
+import json
 from typing import Annotated, Any
 
 from mcp.server.fastmcp import FastMCP
@@ -237,6 +238,96 @@ def run_sandbox_scenario(
         return report
     except ValueError as exc:
         return {"error": str(exc)}
+
+
+@server.prompt(
+    title="Reconciliation workflow",
+    description=(
+        "Step-by-step guidance for driving an end-to-end ISO 20022 "
+        "reconciliation with these tools, from raw pain.001/camt.053 through "
+        "to an explained match report."
+    ),
+)
+def reconcile_workflow(
+    scenario: Annotated[
+        str,
+        Field(
+            description=(
+                "Optional sandbox scenario name (e.g. 'clean_match') to walk "
+                "through concretely; leave blank for the general workflow."
+            )
+        ),
+    ] = "",
+) -> str:
+    """Return prose teaching the normalize -> reconcile -> explain workflow."""
+    steps = (
+        "How to reconcile with this server:\n"
+        "1. Normalize your inputs to canonical records. Pass parsed pain.001 "
+        "instructions through `normalize_pain001` to get the `expected` list, "
+        "and parsed camt.053 entries through `normalize_camt053` to get the "
+        "`observed` list. Each canonical record needs an 'id' and 'amount', "
+        "plus optional 'currency', 'date', 'counterparty' and 'reference'.\n"
+        "2. Reconcile. Call `reconcile` with those `expected` and `observed` "
+        "lists (and an optional tuning `options` object) to get exact "
+        "matches, short/over payments, split settlements (one-to-many), batch "
+        "credits (many-to-one) and the unmatched residuals on each side.\n"
+        "3. Explain. For any pair you want to understand or tune, call "
+        "`explain_match` on that single expected/observed pair to break down "
+        "the reference, amount, date and name signals behind its score."
+    )
+    if scenario:
+        return (
+            steps + "\n\nTo see it end-to-end with zero real data, call "
+            f"`run_sandbox_scenario` with name={scenario!r}; use "
+            "`load_sandbox_scenario` first if you want to inspect or edit its "
+            "expected/observed inputs before reconciling."
+        )
+    return (
+        steps + "\n\nTo try the flow with zero real data, browse the built-in "
+        "fixtures via `list_sandbox_scenarios`, then `run_sandbox_scenario` "
+        "(e.g. name='clean_match') for a full explained result in one call."
+    )
+
+
+@server.resource(
+    "reconcile://sandbox-scenarios",
+    title="Sandbox scenarios",
+    description=(
+        "The catalogue of built-in sandbox scenarios and magic references, "
+        "as JSON -- the resource form of `list_sandbox_scenarios`."
+    ),
+    mime_type="application/json",
+)
+def sandbox_scenarios_resource() -> str:
+    """Serialize the sandbox scenario catalogue and magic references."""
+    return json.dumps(
+        {
+            "scenarios": sandbox.list_scenarios(),
+            "magic_references": sandbox.MAGIC_REFERENCES,
+        }
+    )
+
+
+@server.resource(
+    "reconcile://sandbox/{scenario_id}",
+    title="Sandbox scenario",
+    description=(
+        "One named sandbox scenario's expected/observed inputs as JSON -- the "
+        "resource form of `load_sandbox_scenario`. Unknown ids return an "
+        "'error' payload."
+    ),
+    mime_type="application/json",
+)
+def sandbox_scenario_resource(
+    scenario_id: Annotated[
+        str, Field(description="Scenario name, e.g. 'clean_match'.")
+    ],
+) -> str:
+    """Serialize one sandbox scenario's expected and observed record lists."""
+    try:
+        return json.dumps(sandbox.load_scenario(scenario_id))
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
 
 
 def main() -> None:
