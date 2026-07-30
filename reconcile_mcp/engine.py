@@ -50,9 +50,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from itertools import combinations
 from typing import Any
+
+from rapidfuzz.distance import JaroWinkler
 
 # --- Tunable defaults -------------------------------------------------------
 # Signal weights for the one-to-one score. They sum to 1.0 so a perfect match
@@ -604,4 +606,211 @@ def explain_pair(
         "amount_delta": str(delta),
         "within_amount_tolerance": within,
         "reasons": cand.reasons if cand is not None else ["currency mismatch"],
+    }
+
+
+# --- Cap 21: probabilistic name matching ------------------------------------
+
+
+def match_names_probabilistic(
+    name_a: str, name_b: str, threshold: float = 0.85
+) -> dict[str, Any]:
+    """Score two counterparty names with Jaro-Winkler similarity.
+
+    Jaro-Winkler rewards a shared prefix, which suits payment names where the
+    legal suffix drifts ("ACME Corp" vs "ACME Corporation Inc") far more than
+    the plain token-overlap heuristic used elsewhere in the engine.
+
+    Args:
+        name_a: first name to compare.
+        name_b: second name to compare.
+        threshold: similarity in ``[0, 1]`` at or above which the pair is a
+            match.
+
+    Returns:
+        ``{"similarity_score": float, "is_match": bool}``.
+
+    Raises:
+        ValueError: if ``threshold`` falls outside ``[0, 1]``.
+    """
+    if not 0.0 <= threshold <= 1.0:
+        raise ValueError("threshold must be within [0, 1]")
+    score = JaroWinkler.similarity(name_a, name_b)
+    return {
+        "similarity_score": round(score, 4),
+        "is_match": score >= threshold,
+    }
+
+
+# --- Cap 22: FX-aware amount matching ---------------------------------------
+
+
+def match_amounts_with_fx_drift(
+    amount_a: float,
+    currency_a: str,
+    amount_b: float,
+    currency_b: str,
+    fx_rate: float,
+    tolerance_pct: float = 1.0,
+) -> dict[str, Any]:
+    """Compare two amounts across currencies, tolerating small FX drift.
+
+    ``fx_rate`` is quoted as units of ``currency_a`` per one unit of
+    ``currency_b`` (e.g. an ``EUR/USD`` quote of ``1.08`` is USD per EUR), so
+    ``amount_a`` is divided by it to express the value in ``currency_b`` before
+    the two are compared. All arithmetic is done in :class:`~decimal.Decimal`.
+
+    Args:
+        amount_a: amount denominated in ``currency_a``.
+        currency_a: ISO 4217 code of ``amount_a``.
+        amount_b: amount denominated in ``currency_b`` to compare against.
+        currency_b: ISO 4217 code of ``amount_b``.
+        fx_rate: units of ``currency_a`` per one unit of ``currency_b``.
+        tolerance_pct: maximum percentage difference still counted as a match.
+
+    Returns:
+        ``{"converted_amount": str, "difference_pct": float, "is_match":
+        bool}`` -- ``converted_amount`` is ``amount_a`` expressed in
+        ``currency_b``.
+
+    Raises:
+        ValueError: if ``fx_rate`` is not strictly positive.
+    """
+    rate = Decimal(str(fx_rate))
+    if rate <= 0:
+        raise ValueError("fx_rate must be positive")
+    a = Decimal(str(amount_a))
+    b = Decimal(str(amount_b))
+    converted = (a / rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    difference_pct = abs(converted - b) / abs(b) * Decimal(100)
+    diff_float = float(difference_pct)
+    return {
+        "converted_amount": str(converted),
+        "difference_pct": round(diff_float, 4),
+        "is_match": diff_float <= tolerance_pct,
+    }
+
+
+# --- Cap 23: many-to-many (subset-sum) reconciliation -----------------------
+
+
+def _import_ilp() -> tuple[Any, Any, Any, Any]:
+    """Import the scipy/numpy ILP stack lazily.
+
+    Isolated so scipy stays an optional (``[ilp]``) dependency and so tests can
+    monkeypatch it to exercise the graceful-degradation path. Imports go
+    through :func:`importlib.import_module` so a static type checker never has
+    to resolve (and choke on) the heavy scipy/numpy stubs.
+    """
+    import importlib
+
+    np = importlib.import_module("numpy")
+    optimize = importlib.import_module("scipy.optimize")
+    return np, optimize.milp, optimize.LinearConstraint, optimize.Bounds
+
+
+def _ilp_subset(
+    target: Decimal,
+    parts: list[Item],
+    tol: Decimal,
+    np: Any,
+    milp: Any,
+    linear_constraint: Any,
+    bounds: Any,
+) -> list[Item] | None:
+    """Return a subset of ``parts`` summing to ``target`` within ``tol``.
+
+    Modelled as a 0/1 integer program: one binary variable per part, an
+    equality-with-tolerance constraint on the weighted sum, and a
+    "select at least one" constraint. The objective minimises the number of
+    parts selected, so the smallest satisfying subset wins.
+    """
+    if not parts:
+        return None
+    n = len(parts)
+    amounts = np.array([float(p.amount) for p in parts]).reshape(1, n)
+    target_f = float(target)
+    tol_f = float(tol)
+    constraints = [
+        linear_constraint(amounts, target_f - tol_f, target_f + tol_f),
+        linear_constraint(np.ones((1, n)), 1, n),
+    ]
+    result = milp(
+        c=np.ones(n),
+        constraints=constraints,
+        integrality=np.ones(n),
+        bounds=bounds(0, 1),
+    )
+    if not result.success:
+        return None
+    return [parts[i] for i in range(n) if round(result.x[i]) == 1]
+
+
+def reconcile_many_to_many(
+    statements_raw: list[dict[str, Any]],
+    invoices_raw: list[dict[str, Any]],
+    tolerance: Any = "0.01",
+) -> dict[str, Any]:
+    """Match each statement/deposit to a disjoint subset of invoices.
+
+    Each statement amount is settled by a subset of the still-unused invoices
+    that sums to it within ``tolerance`` (a bounded subset-sum solved as an
+    integer program). Statements are processed in order and consumed invoices
+    are removed from the pool, so no invoice is claimed twice.
+
+    Args:
+        statements_raw: canonical deposit records (each needs ``id`` and
+            ``amount``).
+        invoices_raw: canonical invoice records (each needs ``id`` and
+            ``amount``).
+        tolerance: absolute amount tolerance for a subset sum.
+
+    Returns:
+        ``{"matches": [...], "unmatched_statements": [...],
+        "unmatched_invoices": [...]}`` on success, or ``{"error": ...}`` if the
+        optional ILP solver is not installed.
+
+    Raises:
+        ValueError: if any record lacks an ``id`` or a numeric ``amount``.
+    """
+    try:
+        np, milp, linear_constraint, bounds = _import_ilp()
+    except ImportError:
+        return {
+            "error": "ILP solver unavailable; pip install reconcile-mcp[ilp]"
+        }
+
+    statements = [to_item(r) for r in statements_raw]
+    invoices = [to_item(r) for r in invoices_raw]
+    tol = _to_decimal(tolerance) or Decimal("0.01")
+
+    used: set[str] = set()
+    matches: list[dict[str, Any]] = []
+    unmatched_statements: list[str] = []
+    for stmt in statements:
+        pool = [inv for inv in invoices if inv.id not in used]
+        combo = _ilp_subset(
+            stmt.amount, pool, tol, np, milp, linear_constraint, bounds
+        )
+        if combo is None:
+            unmatched_statements.append(stmt.id)
+            continue
+        for inv in combo:
+            used.add(inv.id)
+        total = sum((i.amount for i in combo), Decimal(0))
+        matches.append(
+            {
+                "statement": stmt.id,
+                "statement_amount": str(stmt.amount),
+                "invoices": [i.id for i in combo],
+                "invoices_total": str(total),
+                "residual": str(stmt.amount - total),
+            }
+        )
+
+    unmatched_invoices = [inv.id for inv in invoices if inv.id not in used]
+    return {
+        "matches": matches,
+        "unmatched_statements": unmatched_statements,
+        "unmatched_invoices": unmatched_invoices,
     }

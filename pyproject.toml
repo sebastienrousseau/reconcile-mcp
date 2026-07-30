@@ -27,6 +27,14 @@ reconcile-mcp = "reconcile_mcp.server:main"
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 mcp = ">=1.2,<2"
+rapidfuzz = ">=3.0,<4"
+# scipy powers the many-to-many (subset-sum) ILP solver. It is heavy, so it is
+# optional: the tool degrades gracefully when it is absent. Install via the
+# "ilp" extra: pip install reconcile-mcp[ilp].
+scipy = { version = ">=1.11,<2", optional = true }
+
+[tool.poetry.extras]
+ilp = ["scipy"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.3,<10.0.0"
@@ -35,6 +43,8 @@ black = "^26.3.1"
 ruff = "^0.1.0"
 mypy = "^1.11.0"
 bandit = "^1.7.0"
+# scipy is exercised in the test suite so the real ILP solve path is covered.
+scipy = ">=1.11,<2"
 
 [build-system]
 requires = ["poetry-core"]
@@ -104,6 +114,9 @@ warn_unused_ignores = true
 warn_no_return = true
 check_untyped_defs = true
 strict_equality = true
+# Honour per-module follow_imports even for .pyi stubs, so the numpy override
+# below can take effect (numpy is pulled in transitively by rapidfuzz's stubs).
+follow_imports_for_stubs = true
 exclude = [
     "tmp_env/",
     ".venv/",
@@ -112,6 +125,15 @@ exclude = [
 
 [[tool.mypy.overrides]]
 module = "mcp.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# numpy (reached transitively via rapidfuzz's stubs, and lazily by the ILP
+# solver) ships PEP 695 "type" statements in its stubs that fail to parse under
+# python_version 3.10. Skip it and treat it as Any -- we never rely on its
+# types.
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

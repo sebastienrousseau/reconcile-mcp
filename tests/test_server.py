@@ -33,6 +33,9 @@ EXPECTED_TOOLS = {
     "list_sandbox_scenarios",
     "load_sandbox_scenario",
     "run_sandbox_scenario",
+    "match_names_probabilistic",
+    "match_amounts_with_fx_drift",
+    "reconcile_many_to_many",
 }
 
 
@@ -104,6 +107,30 @@ def test_run_sandbox_scenario_tool_happy_and_error():
     assert ok["summary"]["fully_reconciled"] is True
     assert ok["scenario"]["name"] == "clean_match"
     err = srv.run_sandbox_scenario("nope")
+    assert "error" in err
+
+
+def test_match_names_probabilistic_tool_happy_and_error():
+    ok = srv.match_names_probabilistic("ACME Corp", "ACME Corporation Inc")
+    assert ok["is_match"] is True
+    err = srv.match_names_probabilistic("a", "b", threshold=2.0)
+    assert "error" in err
+
+
+def test_match_amounts_with_fx_drift_tool_happy_and_error():
+    ok = srv.match_amounts_with_fx_drift(100.0, "USD", 92.50, "EUR", 1.08)
+    assert ok["is_match"] is True
+    err = srv.match_amounts_with_fx_drift(100.0, "USD", 92.5, "EUR", 0.0)
+    assert "error" in err
+
+
+def test_reconcile_many_to_many_tool_happy_and_error():
+    invoices = [{"id": f"INV{i}", "amount": str(2**i)} for i in range(6)]
+    # 4 + 32 == INV2 + INV5 sums to the deposit; superincreasing amounts make
+    # that the only subset that can hit 36.
+    ok = srv.reconcile_many_to_many([{"id": "DEP1", "amount": "36"}], invoices)
+    assert ok["matches"][0]["invoices"] == ["INV2", "INV5"]
+    err = srv.reconcile_many_to_many([{"id": "bad"}], invoices)
     assert "error" in err
 
 
