@@ -29,16 +29,28 @@ def main() -> None:
     """Demonstrate the sandbox, an ad-hoc reconcile, and a single-pair explain."""
     # 1. One-call sandbox run -- no data needed.
     print("== run_sandbox_scenario('split_settlement') ==")
-    print(json.dumps(server.run_sandbox_scenario("split_settlement")["summary"]))
+    print(
+        json.dumps(server.run_sandbox_scenario("split_settlement")["summary"])
+    )
 
     # 2. Reconcile your own records.
     print("\n== reconcile (short payment) ==")
     report = server.reconcile(
         expected=[
-            {"id": "INV-9", "amount": 500.00, "currency": "EUR", "reference": "INV-9"}
+            {
+                "id": "INV-9",
+                "amount": 500.00,
+                "currency": "EUR",
+                "reference": "INV-9",
+            }
         ],
         observed=[
-            {"id": "E-9", "amount": 480.00, "currency": "EUR", "reference": "INV-9"}
+            {
+                "id": "E-9",
+                "amount": 480.00,
+                "currency": "EUR",
+                "reference": "INV-9",
+            }
         ],
     )
     print(json.dumps(report["matches"][0]))
