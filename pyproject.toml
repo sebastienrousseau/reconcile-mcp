@@ -33,6 +33,12 @@ rapidfuzz = ">=3.0,<4"
 # "ilp" extra: pip install reconcile-mcp[ilp].
 scipy = { version = ">=1.11,<2", optional = true }
 
+# Transitive, via `mcp` -> `pyjwt[crypto]`. Nothing in this tree
+# constrains it, so a resolver is free to pick a version in the
+# >=44.0.0,<50.0.0 range that GHSA flags as high severity. Floored
+# here so the patched line is the only resolvable one; the pins in
+# requirements/ already sit at 50.0.0.
+cryptography = ">=50.0.0"
 [tool.poetry.extras]
 ilp = ["scipy"]
 
