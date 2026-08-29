@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "reconcile-mcp"
-version = "0.0.3"
+version = "0.0.4"
 description = "Model Context Protocol (MCP) server that reconciles ISO 20022 camt.053 bank-statement entries against expected pain.001 payments -- explainable exact, partial, one-to-many and many-to-one matching."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0 OR MIT"
@@ -51,12 +51,22 @@ mypy = "^1.11.0"
 bandit = "^1.7.0"
 # scipy is exercised in the test suite so the real ILP solve path is covered.
 scipy = ">=1.11,<2"
-
+# tests/test_suite_conformance.py parses pyproject.toml. tomllib is
+# stdlib only from 3.11 and the suite floor is 3.10, so without the
+# backport the conformance gate does not run there at all.
+tomli = { version = ">=2", python = "<3.11" }
+packaging = ">=23"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+# tests/test_suite_conformance.py is generated and vendored from one
+# canonical copy shared across the suite, and checksummed by its own
+# test. The suite uses three different line lengths, so letting each
+# repository's formatter rewrite it would make the checksum
+# unsatisfiable everywhere.
 [tool.black]
+extend-exclude = "tests/test_suite_conformance\\.py"
 line-length = 79
 target-version = ['py310']
 
