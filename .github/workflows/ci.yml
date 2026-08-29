@@ -40,6 +40,12 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --tb=short
 
+      # Not a timing gate -- wall-clock is not comparable between runners.
+      # This proves the benchmark still runs against the current API
+      # rather than rotting into a file that reads as verified and is not.
+      - name: Run the benchmark
+        run: python benches/bench_reconcile.py --quick
+
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
@@ -59,10 +65,10 @@ jobs:
           pip install ruff black mypy
 
       - name: Ruff check
-        run: ruff check reconcile_mcp/ tests/
+        run: ruff check reconcile_mcp/ tests/ examples/ benches/
 
       - name: Black check
-        run: black --check reconcile_mcp/ tests/
+        run: black --check reconcile_mcp/ tests/ examples/ benches/
 
       - name: Mypy
         run: mypy reconcile_mcp/

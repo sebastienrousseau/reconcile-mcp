@@ -1,0 +1,69 @@
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.0.4] - 2026-08-29
+
+Brings this repository onto the suite conformance gate. It had no
+`CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `docs/` or `benches/`.
+
+### Added
+
+- **`benches/bench_reconcile.py`**, and it found something that changes how
+  this server should be used.
+
+  **On clean data, matching is quadratic** — exponent ~2.0, which is what a
+  pairwise matcher should be. 200 records takes about 0.5 s.
+
+  **On realistic data it collapses.** With three kinds of discrepancy at
+  once — some entries missing from the bank side, some references rewritten,
+  some amounts short by a fee — the measured exponent is about **4.4**:
+
+  | Records | One discrepancy type | Three at once |
+  |---:|---:|---:|
+  | 100 | 123 ms | **540 ms** |
+  | 200 | 497 ms | **68,988 ms** |
+
+  Doubling 100 to 200 multiplied the time by **128**, and the slope is still
+  rising — the signature of a combinatorial search rather than a polynomial
+  one. "Three at once" is not a stress case; it is what a month-end ledger
+  looks like.
+
+  **`reconcile_many_to_many` stays usable**: about 396 ms at 200 mixed
+  records against 69 s for one-to-one, a **174x** gap in favour of the more
+  general algorithm. That points at something specific in the one-to-one
+  path rather than at the task being hard.
+
+  It needs the `ilp` extra (scipy). Measured without it the solver degrades
+  and returns almost instantly, which is easy to mistake for speed — the
+  first draft of this benchmark did exactly that.
+
+  Nothing is changed to address it. That is a substantial algorithmic fix
+  with its own risks and deserves its own release rather than being
+  smuggled into one that adds a benchmark. It is now measured, documented,
+  and run by CI.
+
+- **`docs/index.md`**, including the practical consequence: keep one-to-one
+  batches under about 100 records and split larger ledgers by account, date
+  or counterparty.
+
+- **`SECURITY.md`**, which records this as an **availability** risk rather
+  than a performance note. A caller can make the server unresponsive with a
+  few hundred ordinary records — no malformed payload required.
+
+- **`CONTRIBUTING.md`**, naming the exponent as the open problem and asking
+  that any fix keep `explain_match` honest.
+
+- **`tests/test_suite_conformance.py`** — invariants shared across the
+  suite, vendored from one canonical copy and checksummed by its own test.
+
+### Changed
+
+- CI lints, formats and runs `benches/` alongside everything else.
+
+[0.0.4]: https://github.com/sebastienrousseau/reconcile-mcp/releases/tag/v0.0.4
