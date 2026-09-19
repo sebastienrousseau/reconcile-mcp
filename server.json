@@ -6,12 +6,12 @@
     "url": "https://github.com/sebastienrousseau/reconcile-mcp",
     "source": "github"
   },
-  "version": "0.0.1",
+  "version": "0.0.5",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "reconcile-mcp",
-      "version": "0.0.1",
+      "version": "0.0.5",
       "transport": {
         "type": "stdio"
       }

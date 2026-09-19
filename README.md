@@ -1,5 +1,7 @@
 # reconcile-mcp: An MCP Server for ISO 20022 Cash Reconciliation
 
+[![Glama MCP server score](https://glama.ai/mcp/servers/sebastienrousseau/reconcile-mcp/badges/score.svg)](https://glama.ai/mcp/servers/sebastienrousseau/reconcile-mcp)
+
 **A [Model Context Protocol][mcp] server that matches *expected* payments
 (from `pain.001` credit transfers) against *observed* booked entries (from a
 `camt.053` statement) and returns an explainable reconciliation** — exact
@@ -7,7 +9,7 @@ matches, short/over payments, split settlements (one-to-many), batch credits
 (many-to-one), and the residual unmatched items on each side, every match
 carrying a score and the reasons it was made.
 
-> **Latest release: v0.0.1** — 7 MCP tools over stdio, pure-Python matching
+> **Latest release: v0.0.5** — 10 MCP tools over stdio, pure-Python matching
 > engine, deterministic sandbox test-mode, for Python 3.10+. Part of the
 > [ISO 20022 MCP suite](#the-iso-20022-mcp-suite): you own both sides of the
 > match.
@@ -34,7 +36,7 @@ one, add the rest as your workflow grows.
 
 | Server | Scope | Surface | Install | Use it when |
 | --- | --- | --- | --- | --- |
-| [`camt053-mcp`][camt053-mcp] | ISO 20022 `camt.053`/`camt.052` bank statements: parse, validate, filter, reverse; MT940/MT942 migration; CBPR+ readiness; journal export | 22 MCP tools · 4 prompts · 3 resources | `pip install camt053-mcp` | You work with bank-to-customer statements end to end — the suite's flagship |
+| [`camt053-mcp`][camt053-mcp] | ISO 20022 `camt.053`/`camt.052` bank statements: parse, validate, filter, reverse; MT940/MT942 migration; CBPR+ readiness; journal export | 24 MCP tools · 4 prompts · 3 resources | `pip install camt053-mcp` | You work with bank-to-customer statements end to end — the suite's flagship |
 | [`iso20022-mcp`][iso20022-mcp] | Unified gateway: `search` / `describe` / `validate` / `generate` / `parse` meta-tools routed across the `pain` · `pacs` · `camt` · `acmt` families | 7 meta-tools | `pip install "iso20022-mcp[all]"` | You want one entry point to every message family |
 | [`reconcile-mcp`](#install) | Matches expected `pain.001` payments against observed `camt.053` entries — exact, partial, one-to-many, many-to-one, every match scored and explained | 7 MCP tools | `pip install reconcile-mcp` | You need explainable statement/payment reconciliation — **this package** |
 | [`bankstatementparser-mcp`][bsp-mcp] | Multi-format statement ingestion: ISO 20022 CAMT.053 and pain.001, SWIFT MT940, OFX/QFX, CSV | 5 MCP tools · 1 prompt · 1 resource | `pip install bankstatementparser-mcp` | Your statements arrive in mixed or legacy formats |
