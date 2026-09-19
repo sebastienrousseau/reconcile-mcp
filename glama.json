@@ -5,7 +5,7 @@
   ],
   "title": "reconcile-mcp",
   "display_name": "Reconcile MCP",
-  "description": "Model Context Protocol (MCP) server that reconciles ISO 20022 camt.053 bank-statement entries against expected pain.001 payments. Provides explainable exact, partial, one-to-many and many-to-one matching with per-match scores and classification, tools to normalise both pain.001 and camt.053 inputs, single-pair match explanation for tuning, and built-in sandbox scenarios for zero-setup trials. Apache-2.0, pure Python over stdio.",
+  "description": "Model Context Protocol (MCP) server that reconciles ISO 20022 camt.053 bank-statement entries against expected pain.001 payments. Provides explainable exact, partial, one-to-many and many-to-one matching with per-match scores and classification, tools to normalise both pain.001 and camt.053 inputs, single-pair match explanation for tuning, and built-in sandbox scenarios for zero-setup trials. Apache-2.0 OR MIT, pure Python over stdio, streamable HTTP or SSE.",
   "version": "0.0.5",
   "repository": "https://github.com/sebastienrousseau/reconcile-mcp",
   "homepage": "https://reconcile-mcp.com",

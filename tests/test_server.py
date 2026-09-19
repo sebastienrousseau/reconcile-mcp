@@ -186,9 +186,10 @@ def test_sandbox_scenario_resource_error():
 
 
 def test_main_runs_server(monkeypatch):
+    """``main([])`` delegates to the server's ``run`` over stdio."""
     called = {}
     monkeypatch.setattr(
         srv.server, "run", lambda: called.setdefault("ran", True)
     )
-    srv.main()
+    srv.main([])
     assert called["ran"] is True
