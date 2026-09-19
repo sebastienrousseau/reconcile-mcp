@@ -18,6 +18,18 @@ python benches/bench_reconcile.py --quick    # the benchmark still runs
 
 `pytest` fails below **100% branch coverage**.
 
+## Sign-off
+
+Every commit must carry a `Signed-off-by:` trailer, which is you
+certifying the [Developer Certificate of Origin](DCO.txt). `git commit -s`
+adds it; the `DCO` workflow fails a pull request that lacks one. To fix an
+existing branch: `git rebase --signoff main && git push --force-with-lease`.
+
+## Decisions
+
+A change that shapes the server (a new transport, a new registration
+pattern) gets a record in [`docs/adr/`](docs/adr/index.md).
+
 ## The open problem
 
 `reconcile` collapses on realistic data — a measured growth exponent near
@@ -51,8 +63,11 @@ local edit fails `test_this_file_is_the_canonical_copy` by design.
 
 **Versions increment by 0.0.1.** `0.1.0` follows `0.0.999`.
 
-The version lives in `pyproject.toml` and `reconcile_mcp/__init__.py`.
-Change both and add a `CHANGELOG.md` entry.
+The version lives in `pyproject.toml`, `reconcile_mcp/__init__.py`,
+`glama.json` and `server.json`. Change all four and add a `CHANGELOG.md`
+entry; `scripts/verify_versions.py` fails when they disagree. The
+release process is in [`RELEASING.md`](RELEASING.md); roles and decision
+making are in [`GOVERNANCE.md`](GOVERNANCE.md).
 
 ## Licence
 

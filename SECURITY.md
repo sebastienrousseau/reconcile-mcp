@@ -6,8 +6,8 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 0.0.4   | :white_check_mark: |
-| < 0.0.4 | :x:               |
+| 0.0.5   | :white_check_mark: |
+| < 0.0.5 | :x:               |
 
 ## Reporting a vulnerability
 
@@ -44,3 +44,30 @@ This is recorded rather than fixed. Treat it as a known limit.
 Records are plain dictionaries; nothing is executed, deserialised into
 objects, or read from disk on the caller's behalf. Sandbox scenarios ship
 with the package and are read from it, not fetched.
+
+## Transports
+
+The server speaks MCP over stdio by default. `--transport
+streamable-http` and `--transport sse` open a listener that binds
+`127.0.0.1` unless `--host` says otherwise and carries no authentication
+or TLS of its own. Do not bind a routable address without a gateway in
+front of it that adds both, and apply the record-count cap above before
+the listener reaches anyone you do not trust.
+
+## Continuous integration
+
+- `ci.yml` runs ruff, black, mypy --strict, pytest with the 100%
+  line+branch coverage gate and the benchmark on every push and pull
+  request.
+- `codeql.yml` runs GitHub's CodeQL Python analysis on every push, pull
+  request and weekly.
+- `scorecard.yml` publishes the OpenSSF Scorecard weekly; every action
+  in every workflow is pinned by commit SHA.
+- `dco.yml` requires a `Signed-off-by:` trailer on every commit.
+- `mcp-inspect.yml` lists the tools over stdio, streamable HTTP and SSE
+  with the MCP Inspector.
+- Dependabot (`.github/dependabot.yml`) proposes pip and GitHub Actions
+  updates weekly.
+- `release.yml` publishes to PyPI through OIDC trusted publishing with
+  SLSA build provenance, cosign signatures and SBOMs; `publish-mcp.yml`
+  publishes to the MCP registry.

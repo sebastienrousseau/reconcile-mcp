@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+cff-version: 1.2.0
+message: "If you use reconcile-mcp in research or production write-ups, please cite it as below."
+type: software
+title: "reconcile-mcp: Model Context Protocol server for ISO 20022 cash reconciliation"
+abstract: >-
+  A Model Context Protocol server that matches expected payments (pain.001
+  credit transfers) against observed bank-statement entries (camt.053) and
+  returns an explainable reconciliation: ten tools for exact, partial,
+  one-to-many, many-to-one and subset-sum matching, single-pair explanation,
+  probabilistic name and FX-drift amount comparison, adapters for both
+  message families and deterministic sandbox scenarios.
+authors:
+  - family-names: Rousseau
+    given-names: Sebastien
+    email: sebastian.rousseau@gmail.com
+version: "0.0.5"
+date-released: "2026-08-29"
+license: "Apache-2.0 OR MIT"
+repository-code: "https://github.com/sebastienrousseau/reconcile-mcp"
+url: "https://reconcile-mcp.com"
+keywords:
+  - ISO 20022
+  - reconciliation
+  - camt.053
+  - pain.001
+  - Model Context Protocol
+  - MCP
+  - AI agents
+  - treasury

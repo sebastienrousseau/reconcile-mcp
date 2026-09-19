@@ -9,8 +9,9 @@ matches, short/over payments, split settlements (one-to-many), batch credits
 (many-to-one), and the residual unmatched items on each side, every match
 carrying a score and the reasons it was made.
 
-> **Latest release: v0.0.5** — 10 MCP tools over stdio, pure-Python matching
-> engine, deterministic sandbox test-mode, for Python 3.10+. Part of the
+> **Latest release: v0.0.5** — 10 MCP tools over stdio, streamable HTTP or
+> SSE, pure-Python matching engine, deterministic sandbox test-mode, for
+> Python 3.10+. Part of the
 > [ISO 20022 MCP suite](#the-iso-20022-mcp-suite): you own both sides of the
 > match.
 
@@ -38,7 +39,7 @@ one, add the rest as your workflow grows.
 | --- | --- | --- | --- | --- |
 | [`camt053-mcp`][camt053-mcp] | ISO 20022 `camt.053`/`camt.052` bank statements: parse, validate, filter, reverse; MT940/MT942 migration; CBPR+ readiness; journal export | 24 MCP tools · 4 prompts · 3 resources | `pip install camt053-mcp` | You work with bank-to-customer statements end to end — the suite's flagship |
 | [`iso20022-mcp`][iso20022-mcp] | Unified gateway: `search` / `describe` / `validate` / `generate` / `parse` meta-tools routed across the `pain` · `pacs` · `camt` · `acmt` families | 7 meta-tools | `pip install "iso20022-mcp[all]"` | You want one entry point to every message family |
-| [`reconcile-mcp`](#install) | Matches expected `pain.001` payments against observed `camt.053` entries — exact, partial, one-to-many, many-to-one, every match scored and explained | 7 MCP tools | `pip install reconcile-mcp` | You need explainable statement/payment reconciliation — **this package** |
+| [`reconcile-mcp`](#install) | Matches expected `pain.001` payments against observed `camt.053` entries — exact, partial, one-to-many, many-to-one, every match scored and explained | 10 MCP tools · 1 prompt · 2 resources | `pip install reconcile-mcp` | You need explainable statement/payment reconciliation — **this package** |
 | [`bankstatementparser-mcp`][bsp-mcp] | Multi-format statement ingestion: ISO 20022 CAMT.053 and pain.001, SWIFT MT940, OFX/QFX, CSV | 5 MCP tools · 1 prompt · 1 resource | `pip install bankstatementparser-mcp` | Your statements arrive in mixed or legacy formats |
 | [`structured-address-fix-mcp`][saf-mcp] | ISO 20022 postal-address classification, assessment & remediation for the November 2026 structured-address cutover (`pacs.008` / `pain.001` debtor & creditor addresses) | 9 MCP tools | `pip install structured-address-fix-mcp` | You need debtor/creditor addresses cliff-ready ahead of 14 Nov 2026 |
 | [`iso20022-readiness-suite-mcp`](https://github.com/sebastienrousseau/iso20022-readiness-suite-mcp) | Orchestration gateway: detect → structurally validate → clearing-profile lint → readiness score, plus automated remediation and `pacs.002` bank-response simulation — a meta-client over the foundational servers | 4 MCP tools | `pip install iso20022-readiness-suite-mcp` | You want one high-level readiness / orchestration entry point over the suite |
@@ -116,6 +117,32 @@ settlement, and an unexpected credit correctly left unmatched:
 List every scenario with `list_sandbox_scenarios`; load one to inspect or edit
 its inputs with `load_sandbox_scenario`.
 
+## Transports
+
+One command line, three transports:
+
+| Command | Transport | Endpoint | Protocol revisions |
+| :--- | :--- | :--- | :--- |
+| `reconcile-mcp` | stdio | the client spawns the process | 2026-07-28, 2025-11-25 |
+| `reconcile-mcp --transport streamable-http` | Streamable HTTP | `http://127.0.0.1:8000/mcp` | 2026-07-28 (stateless, `server/discover`) and 2025-11-25 (`initialize`, `Mcp-Session-Id`) on the same endpoint; responses stream as server-sent events, `GET` opens the server-to-client stream |
+| `reconcile-mcp --transport sse` | HTTP+SSE (2024-11-05) | `http://127.0.0.1:8000/sse` and `/messages/` | for clients that still expect the older transport |
+
+`--host` and `--port` change the bind address (defaults `127.0.0.1` and
+`8000`). The HTTP transports carry no authentication of their own: bind
+loopback, or put the server behind a gateway you trust before binding a
+routable address. Every release is verified over streamable HTTP with
+[scout](https://github.com/sebastienrousseau/scout) in both protocol
+eras and over SSE with the MCP SDK client; see
+[ADR 0001](docs/adr/0001-three-transports-one-command-line.md).
+
+```json
+{
+  "mcpServers": {
+    "reconcile": { "url": "http://127.0.0.1:8000/mcp" }
+  }
+}
+```
+
 ## Bring your own data
 
 Records are small canonical objects — `id` and `amount` required, everything
@@ -151,6 +178,15 @@ Then call `reconcile(expected, observed)`.
 - `list_sandbox_scenarios` — List the built-in test-mode scenarios and magic references.
 - `load_sandbox_scenario` — Return one scenario's expected/observed inputs to inspect or edit.
 - `run_sandbox_scenario` — Load a scenario and reconcile it in one call — the fastest first run.
+- `match_names_probabilistic` — Score two counterparty names by Jaro-Winkler similarity and flag a match at a threshold.
+- `match_amounts_with_fx_drift` — Compare two amounts in different currencies through a supplied FX rate, within a percentage tolerance.
+- `reconcile_many_to_many` — Match each deposit to a disjoint subset of invoices whose amounts sum to it (subset-sum ILP; needs the `ilp` extra).
+
+Plus one prompt and two resources:
+
+- Prompt `reconcile_workflow` — Step-by-step guidance from raw `pain.001`/`camt.053` to an explained match report.
+- Resource `reconcile://sandbox-scenarios` — The built-in scenario catalogue.
+- Resource `reconcile://sandbox/{scenario_id}` — One scenario's expected/observed inputs.
 
 ## How matching works
 
@@ -185,7 +221,8 @@ ruff check reconcile_mcp tests && black --check reconcile_mcp tests && mypy reco
 
 ## Licence
 
-Licensed under the [Apache License, Version 2.0](LICENSE).
+Licensed under the [Apache License, Version 2.0](LICENSE-APACHE) or the
+[MIT License](LICENSE-MIT), at your option.
 
 ---
 

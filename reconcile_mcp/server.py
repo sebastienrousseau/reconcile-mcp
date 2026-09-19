@@ -42,7 +42,8 @@ Launching the server:
           }
         }
 
-The server communicates over stdio (the SDK's default transport).
+stdio by default; ``--transport streamable-http`` or ``--transport sse``
+listens on ``--host``/``--port`` instead. See :mod:`reconcile_mcp._cli`.
 """
 
 import json
@@ -51,7 +52,7 @@ from typing import Annotated, Any
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from reconcile_mcp import __version__, adapters, engine, sandbox
+from reconcile_mcp import __version__, _cli, adapters, engine, sandbox
 from reconcile_mcp._mcp_compat import build_server
 
 # The shim picks FastMCP (mcp 1.x) or MCPServer (mcp 2.x) and reports
@@ -463,9 +464,16 @@ def sandbox_scenario_resource(
         return json.dumps({"error": str(exc)})
 
 
-def main() -> None:
-    """Run the reconcile MCP server over stdio (the ``reconcile-mcp`` entry)."""
-    server.run()
+def main(argv: list[str] | None = None) -> None:
+    """Run the reconcile MCP server (the ``reconcile-mcp`` entry point).
+
+    stdio by default; ``--transport streamable-http`` or ``--transport sse``
+    listens on ``--host``/``--port`` instead. See :mod:`reconcile_mcp._cli`.
+
+    Args:
+        argv: Command-line arguments; ``None`` reads ``sys.argv[1:]``.
+    """
+    _cli.serve(server, argv, "reconcile-mcp", __version__)
 
 
 if __name__ == "__main__":
