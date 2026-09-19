@@ -47,7 +47,7 @@ pytest = ">=9.0.3,<10.0.0"
 pytest-cov = ">=6.0.0,<8.0.0"
 black = "^26.3.1"
 ruff = "^0.1.0"
-mypy = "^1.11.0"
+mypy = ">=1.11,<3.0"
 bandit = "^1.7.0"
 # scipy is exercised in the test suite so the real ILP solve path is covered.
 scipy = ">=1.11,<2"
