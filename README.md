@@ -131,7 +131,7 @@ One command line, three transports:
 `8000`). The HTTP transports carry no authentication of their own: bind
 loopback, or put the server behind a gateway you trust before binding a
 routable address. Every release is verified over streamable HTTP with
-[scout](https://github.com/sebastienrousseau/scout) in both protocol
+[passmcp](https://github.com/sebastienrousseau/passmcp) in both protocol
 eras and over SSE with the MCP SDK client; see
 [ADR 0001](docs/adr/0001-three-transports-one-command-line.md).
 
