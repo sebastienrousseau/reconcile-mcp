@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "reconcile-mcp"
-version = "0.0.5"
+version = "0.0.6"
 description = "Model Context Protocol (MCP) server that reconciles ISO 20022 camt.053 bank-statement entries against expected pain.001 payments -- explainable exact, partial, one-to-many and many-to-one matching."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0 OR MIT"
@@ -32,6 +32,14 @@ rapidfuzz = ">=3.0,<4"
 # optional: the tool degrades gracefully when it is absent. Install via the
 # "ilp" extra: pip install reconcile-mcp[ilp].
 scipy = { version = ">=1.11,<2", optional = true }
+# Agent-framework adapters (reconcile_mcp.framework_adapters) wrap the gateway
+# tools into each framework's native tool type. The frameworks are heavy and
+# conflict-prone, so they are strictly optional and are NOT test or dev
+# dependencies; install only the adapter you need via its extra, e.g.
+# pip install reconcile-mcp[langchain].
+langchain-core = { version = ">=0.2", optional = true }
+crewai = { version = ">=0.51", optional = true }
+llama-index-core = { version = ">=0.10", optional = true }
 
 # Transitive, via `mcp` -> `pyjwt[crypto]`. Nothing in this tree
 # constrains it, so a resolver is free to pick a version in the
@@ -41,6 +49,9 @@ scipy = { version = ">=1.11,<2", optional = true }
 cryptography = ">=50.0.0"
 [tool.poetry.extras]
 ilp = ["scipy"]
+langchain = ["langchain-core"]
+crewai = ["crewai"]
+llamaindex = ["llama-index-core"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.3,<10.0.0"
@@ -141,6 +152,17 @@ exclude = [
 
 [[tool.mypy.overrides]]
 module = "mcp.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Agent frameworks are optional extras, lazily imported by
+# framework_adapters.py and not installed in the type-check environment.
+module = [
+    "langchain_core.*",
+    "crewai.*",
+    "crewai_tools.*",
+    "llama_index.*",
+]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

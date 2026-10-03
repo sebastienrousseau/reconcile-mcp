@@ -7,10 +7,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.6] - 2026-10-03
 
 ### Added
 
+- Agent framework adapters in `reconcile_mcp.framework_adapters` wrapping
+  all 10 reconciliation gateway tools into native tool formats for
+  LangChain (`as_langchain_tools`), CrewAI (`as_crewai_tools`), and
+  LlamaIndex (`as_llamaindex_tools`) via optional lazy extras.
+- Structured Tool Definition Quality Score (TDQS) descriptions across all 10
+  MCP tools with explicit Purpose, When to use, When NOT to use,
+  Behavioral transparency, and parameter constraints.
 - `--transport streamable-http` and `--transport sse`, with `--host` and
   `--port`. Streamable HTTP serves both current protocol revisions
   (2026-07-28 stateless with `server/discover`, and 2025-11-25 with the
@@ -18,11 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server-sent events; `sse` serves the older HTTP+SSE transport. stdio
   stays the default and is unchanged. `--version` prints the version.
   ADR 0001 records the decision.
-- Governance and supply-chain files at suite parity: `ARCHITECTURE.md`,
-  `GOVERNANCE.md`, `ROADMAP.md`, `MAINTAINERS.md`, `RELEASING.md`,
-  `SUPPORT.md`, `CODE-OF-CONDUCT.md`, `CITATION.cff`, `DCO.txt` and
-  `docs/adr/`; OpenSSF Scorecard and DCO workflows; Dependabot; every
-  action in every workflow pinned by commit SHA.
+- Governance and supply-chain files at suite parity: `AGENTS.md`, `Makefile`,
+  `DEVELOPMENT.md`, `.editorconfig`, `.pre-commit-config.yaml`,
+  `ARCHITECTURE.md`, `GOVERNANCE.md`, `ROADMAP.md`, `MAINTAINERS.md`,
+  `RELEASING.md`, `SUPPORT.md`, `CODE_OF_CONDUCT.md`, `CITATION.cff`,
+  `DCO.txt` and `docs/adr/`; OpenSSF Scorecard and DCO workflows;
+  Dependabot; every action in every workflow pinned by commit SHA.
+- Dual-licensing standard with full Apache-2.0 `LICENSE`, `LICENSE-APACHE`,
+  `LICENSE-MIT`, and `LICENSES/` tree.
 
 ### Changed
 
@@ -117,4 +127,6 @@ Brings this repository onto the suite conformance gate. It had no
 
 - CI lints, formats and runs `benches/` alongside everything else.
 
+[0.0.6]: https://github.com/sebastienrousseau/reconcile-mcp/releases/tag/v0.0.6
+[0.0.5]: https://github.com/sebastienrousseau/reconcile-mcp/releases/tag/v0.0.5
 [0.0.4]: https://github.com/sebastienrousseau/reconcile-mcp/releases/tag/v0.0.4

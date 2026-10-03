@@ -1,6 +1,14 @@
+<!-- SPDX-FileCopyrightText: 2026 Sebastien Rousseau <sebastian.rousseau@gmail.com> -->
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+
 # reconcile-mcp: An MCP Server for ISO 20022 Cash Reconciliation
 
+[![Build Status](https://github.com/sebastienrousseau/reconcile-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/sebastienrousseau/reconcile-mcp/actions)
+[![PyPI version](https://img.shields.io/pypi/v/reconcile-mcp.svg)](https://pypi.org/project/reconcile-mcp/)
 [![Glama MCP server score](https://glama.ai/mcp/servers/sebastienrousseau/reconcile-mcp/badges/score.svg)](https://glama.ai/mcp/servers/sebastienrousseau/reconcile-mcp)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sebastienrousseau/reconcile-mcp/badge)](https://scorecard.dev/viewer/?push_pull=true&repo=github.com/sebastienrousseau/reconcile-mcp)
+[![License](https://img.shields.io/badge/License-Apache_2.0_OR_MIT-blue.svg)](LICENSE)
+[![Python Version](https://img.shields.io/pypi/pyversions/reconcile-mcp.svg)](https://pypi.org/project/reconcile-mcp/)
 
 **A [Model Context Protocol][mcp] server that matches *expected* payments
 (from `pain.001` credit transfers) against *observed* booked entries (from a
@@ -9,7 +17,7 @@ matches, short/over payments, split settlements (one-to-many), batch credits
 (many-to-one), and the residual unmatched items on each side, every match
 carrying a score and the reasons it was made.
 
-> **Latest release: v0.0.5** — 10 MCP tools over stdio, streamable HTTP or
+> **Latest release: v0.0.6** — 10 MCP tools over stdio, streamable HTTP or
 > SSE, pure-Python matching engine, deterministic sandbox test-mode, for
 > Python 3.10+. Part of the
 > [ISO 20022 MCP suite](#the-iso-20022-mcp-suite): you own both sides of the
