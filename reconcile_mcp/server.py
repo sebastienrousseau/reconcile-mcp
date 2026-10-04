@@ -86,10 +86,22 @@ _OPTIONS_DESC = (
 @server.tool(
     annotations=_PURE_READ,
     description=(
-        "Reconcile expected payments against observed bank-statement entries, "
-        "returning exact matches, short/over payments, split settlements "
-        "(one-to-many), batch credits (many-to-one) and unmatched residuals, "
-        "each with an explainable score and reasons."
+        "Reconcile expected payments against observed bank-statement entries.\n\n"
+        "Purpose:\n"
+        "Matches expected payment instructions (e.g. from pain.001) against observed "
+        "bank transactions (e.g. from camt.053) and produces an explainable reconciliation "
+        "report covering exact matches, short/over adjustments, split settlements "
+        "(one-to-many), batch credits (many-to-one), and unmatched residuals.\n\n"
+        "When to use:\n"
+        "- When performing multi-transaction cash reconciliation between ledgers and statements.\n"
+        "- When transparent per-match confidence scores and reason breakdowns are required for audit.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for raw, unparsed XML files; normalize input documents first using "
+        "normalize_pain001 or normalize_camt053.\n"
+        "- Do NOT use for single-pair tuning analysis; use explain_match instead.\n"
+        "- Do NOT use for unconstrained combinatorial invoice subsets; use reconcile_many_to_many.\n\n"
+        "Behavioral transparency:\n"
+        "Pure, deterministic, side-effect-free, read-only calculation without network or disk access."
     ),
 )
 def reconcile(
@@ -109,9 +121,18 @@ def reconcile(
 @server.tool(
     annotations=_PURE_READ,
     description=(
-        "Score a single expected/observed pair and break down every signal "
-        "(reference, amount, date, name). A tuning aid -- it explains the "
-        "score even for pairs below the review threshold."
+        "Explain the match score between one expected and one observed record.\n\n"
+        "Purpose:\n"
+        "Scores a single transaction pair across reference, amount, date, and name "
+        "signals, returning individual signal weights and an explanation even for pairs below threshold.\n\n"
+        "When to use:\n"
+        "- When tuning scoring weights, tolerances, or debugging match decisions.\n"
+        "- When explaining match confidence for human review or exception handling.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for entire batches; use reconcile instead.\n"
+        "- Do NOT use for cross-currency conversions without a known FX rate; use match_amounts_with_fx_drift.\n\n"
+        "Behavioral transparency:\n"
+        "Pure, deterministic, side-effect-free, read-only calculation without external dependencies."
     ),
 )
 def explain_match(
@@ -135,9 +156,18 @@ def explain_match(
 @server.tool(
     annotations=_PURE_READ,
     description=(
-        "Convert parsed pain.001 payment instructions into canonical expected "
-        "records ready to reconcile. Accepts a list of transactions or a dict "
-        "wrapping them under 'transactions'/'payments'/'records'."
+        "Convert parsed pain.001 payment instructions into canonical expected records.\n\n"
+        "Purpose:\n"
+        "Adapts parsed ISO 20022 pain.001 credit transfer documents or transaction "
+        "lists into canonical expected records ready for the reconcile engine.\n\n"
+        "When to use:\n"
+        "- When ingesting parsed pain.001 files before calling reconcile.\n"
+        "- When mapping diverse payment field structures into uniform id, amount, and reference fields.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for bank statement entries (camt.053); use normalize_camt053 instead.\n"
+        "- Do NOT pass raw unparsed XML text; parse or deserialize to a dictionary or list first.\n\n"
+        "Behavioral transparency:\n"
+        "Pure, deterministic, read-only data normalization."
     ),
 )
 def normalize_pain001(
@@ -155,9 +185,18 @@ def normalize_pain001(
 @server.tool(
     annotations=_PURE_READ,
     description=(
-        "Convert parsed camt.053 statement entries into canonical observed "
-        "records ready to reconcile. Accepts a list of entries or a dict "
-        "wrapping them under 'entries'/'transactions'/'statements'."
+        "Convert parsed camt.053 statement entries into canonical observed records.\n\n"
+        "Purpose:\n"
+        "Adapts parsed ISO 20022 camt.053 bank statement documents or entry lists "
+        "into canonical observed records ready for the reconcile engine.\n\n"
+        "When to use:\n"
+        "- When ingesting parsed bank statements before calling reconcile.\n"
+        "- When transforming bank booking entries into uniform id, amount, date, and counterparty fields.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for payment initiation orders (pain.001); use normalize_pain001 instead.\n"
+        "- Do NOT pass raw unparsed XML text; parse or deserialize first.\n\n"
+        "Behavioral transparency:\n"
+        "Pure, deterministic, read-only data normalization."
     ),
 )
 def normalize_camt053(
@@ -175,9 +214,17 @@ def normalize_camt053(
 @server.tool(
     annotations=_PURE_READ,
     description=(
-        "List the built-in sandbox scenarios (test-mode fixtures). Each "
-        "demonstrates one reconciliation outcome so you can try the flow with "
-        "zero real data."
+        "List built-in sandbox reconciliation scenarios and magic references.\n\n"
+        "Purpose:\n"
+        "Returns the catalog of deterministic test-mode scenarios and synthetic "
+        "magic references to demonstrate reconciliation outcomes without production data.\n\n"
+        "When to use:\n"
+        "- When discovering available test scenarios (e.g. clean_match, month_end, fx_drift).\n"
+        "- When testing agent decision-making workflows with zero setup.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for production reconciliation batches.\n\n"
+        "Behavioral transparency:\n"
+        "Static catalogue retrieval; read-only and instantaneous."
     ),
 )
 def list_sandbox_scenarios() -> dict[str, Any]:
@@ -191,8 +238,18 @@ def list_sandbox_scenarios() -> dict[str, Any]:
 @server.tool(
     annotations=_PURE_READ,
     description=(
-        "Return the expected/observed inputs for one named sandbox scenario, "
-        "so you can inspect or edit the fixture before reconciling."
+        "Load expected and observed record inputs for a named sandbox scenario.\n\n"
+        "Purpose:\n"
+        "Retrieves the test-mode expected and observed fixture records for a named scenario "
+        "so they can be inspected, customized, or passed to reconcile.\n\n"
+        "When to use:\n"
+        "- When reviewing fixture data prior to executing reconciliation runs.\n"
+        "- When creating custom variations of standard reconciliation scenarios.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use if you want to run and reconcile the scenario in one step; use run_sandbox_scenario.\n"
+        "- Do NOT use with non-existent scenario names.\n\n"
+        "Behavioral transparency:\n"
+        "Deterministic dictionary lookup; read-only with no side effects."
     ),
 )
 def load_sandbox_scenario(
@@ -210,9 +267,18 @@ def load_sandbox_scenario(
 @server.tool(
     annotations=_PURE_READ,
     description=(
-        "Load a named sandbox scenario and immediately reconcile it -- the "
-        "one-call way to see a full, explainable result with zero setup. "
-        "Great for a first run or a smoke test."
+        "Load a named sandbox scenario and immediately return its reconciliation report.\n\n"
+        "Purpose:\n"
+        "One-call execution that loads built-in fixture records and executes the reconciliation "
+        "pipeline, returning a complete explainable match report.\n\n"
+        "When to use:\n"
+        "- When performing quick verification, smoke tests, or initial agent demonstrations.\n"
+        "- When verifying tolerance tuning against standard test cases.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use with live production data.\n"
+        "- Do NOT use when custom expected or observed records must be supplied; use reconcile instead.\n\n"
+        "Behavioral transparency:\n"
+        "Deterministic, in-memory execution; read-only and idempotent."
     ),
 )
 def run_sandbox_scenario(
@@ -243,9 +309,18 @@ def run_sandbox_scenario(
     title="Match names (probabilistic)",
     annotations=_PURE_READ,
     description=(
-        "Score two counterparty names with Jaro-Winkler similarity and report "
-        "whether they match at a given threshold. Tolerant of legal-suffix "
-        "drift, e.g. 'ACME Corp' vs 'ACME Corporation Inc'."
+        "Score two counterparty names using Jaro-Winkler string similarity.\n\n"
+        "Purpose:\n"
+        "Computes similarity in [0, 1] between two company or individual names, tolerating "
+        "typographical variations and legal suffix abbreviations (e.g. 'Corp' vs 'Corporation Inc').\n\n"
+        "When to use:\n"
+        "- When verifying whether two counterparty or entity names represent the same party.\n"
+        "- When evaluating name similarity thresholds for automated matching rules.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for full multi-signal transaction matching; use reconcile or explain_match.\n"
+        "- Do NOT use with non-string inputs.\n\n"
+        "Behavioral transparency:\n"
+        "Pure, deterministic string calculation; read-only and idempotent."
     ),
 )
 def match_names_probabilistic(
@@ -281,9 +356,18 @@ def match_names_probabilistic(
     title="Match amounts (FX drift)",
     annotations=_PURE_READ,
     description=(
-        "Compare two amounts in different currencies, converting one via a "
-        "supplied FX rate and matching if the percentage difference is within "
-        "tolerance. Uses exact decimal arithmetic."
+        "Compare two amounts in different currencies within an FX drift tolerance.\n\n"
+        "Purpose:\n"
+        "Converts currency amounts using a provided exchange rate and verifies if the percentage "
+        "difference falls within an acceptable tolerance window using exact decimal arithmetic.\n\n"
+        "When to use:\n"
+        "- When reconciling cross-currency payments with conversion timing or rate variance.\n"
+        "- When evaluating FX tolerance bounds on cross-border transactions.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for same-currency comparisons where standard tolerance applies; use reconcile.\n"
+        "- Do NOT use with non-positive FX rates.\n\n"
+        "Behavioral transparency:\n"
+        "Pure mathematical calculation; read-only and idempotent."
     ),
 )
 def match_amounts_with_fx_drift(
@@ -346,9 +430,18 @@ def match_amounts_with_fx_drift(
     title="Reconcile many-to-many",
     annotations=_PURE_READ,
     description=(
-        "Match each statement/deposit to a disjoint subset of invoices whose "
-        "amounts sum to it (bounded subset-sum solved as an integer program). "
-        "Returns matched groups and the unmatched residuals on each side."
+        "Match statement deposits to disjoint subsets of invoices via subset-sum ILP.\n\n"
+        "Purpose:\n"
+        "Solves bounded subset-sum as an integer linear program (ILP) to pair statement "
+        "deposits against matching combinations of outstanding invoice records.\n\n"
+        "When to use:\n"
+        "- When customer deposits consolidate multiple invoices or split remittances.\n"
+        "- When one-to-one or one-to-many heuristics leave unmatched aggregates.\n\n"
+        "When NOT to use:\n"
+        "- Do NOT use for straightforward 1:1 or 1:N reconciliation where reconcile is sufficient and faster.\n"
+        "- Do NOT use without the optional ilp extra installed (pip install reconcile-mcp[ilp]).\n\n"
+        "Behavioral transparency:\n"
+        "Deterministic ILP optimization; read-only and idempotent."
     ),
 )
 def reconcile_many_to_many(
