@@ -22,7 +22,7 @@ matches, short/over payments, split settlements (one-to-many), batch credits
 (many-to-one), and the residual unmatched items on each side, every match
 carrying a score and the reasons it was made.
 
-> **Latest release: v0.0.6** — 10 MCP tools over stdio, streamable HTTP or
+> **Latest release: v0.0.7**: 10 MCP tools over stdio, streamable HTTP or
 > SSE, pure-Python matching engine, deterministic sandbox test-mode, for
 > Python 3.10+. Part of the
 > [ISO 20022 MCP suite](#the-iso-20022-mcp-suite): you own both sides of the
@@ -232,7 +232,7 @@ pytest                      # 100% branch coverage gate
 ruff check reconcile_mcp tests && black --check reconcile_mcp tests && mypy reconcile_mcp
 ```
 
-## Licence
+## License
 
 Licensed under the [Apache License, Version 2.0](LICENSE-APACHE) or the
 [MIT License](LICENSE-MIT), at your option.
