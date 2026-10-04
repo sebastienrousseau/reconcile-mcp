@@ -10,6 +10,11 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0_OR_MIT-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/pypi/pyversions/reconcile-mcp.svg)](https://pypi.org/project/reconcile-mcp/)
 
+<p align="center">
+  <img src=".github/demo.gif" alt="reconcile-mcp Demo" width="100%" />
+</p>
+
+
 **A [Model Context Protocol][mcp] server that matches *expected* payments
 (from `pain.001` credit transfers) against *observed* booked entries (from a
 `camt.053` statement) and returns an explainable reconciliation** — exact

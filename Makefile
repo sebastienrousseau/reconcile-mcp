@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Sebastien Rousseau <sebastian.rousseau@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 
-.PHONY: help install dev test lint format type-check security verify-versions clean check
+.PHONY: help install dev test lint format type-check security verify-versions clean check demo
 
 PYTHON ?= python3
 VENV ?= .venv
@@ -9,6 +9,11 @@ PYTEST ?= $(if $(wildcard $(VENV)/bin/pytest),$(VENV)/bin/pytest,pytest)
 RUFF ?= $(if $(wildcard $(VENV)/bin/ruff),$(VENV)/bin/ruff,ruff)
 BLACK ?= $(if $(wildcard $(VENV)/bin/black),$(VENV)/bin/black,black)
 MYPY ?= $(if $(wildcard $(VENV)/bin/mypy),$(VENV)/bin/mypy,mypy)
+VHS ?= $(shell which vhs 2>/dev/null || echo /opt/homebrew/bin/vhs)
+
+demo: ## Generate terminal demo animation gif using vhs
+	$(VHS) .github/demo.tape
+
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
