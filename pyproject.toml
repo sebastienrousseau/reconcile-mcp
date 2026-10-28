@@ -42,8 +42,16 @@ scipy = { version = ">=1.11,<2", optional = true }
 langchain-core = { version = ">=0.2", optional = true }
 # crewai requires Python <3.14; without the marker Poetry cannot resolve the
 # project (>=3.10,<4.0) at all, which fails the release SBOM job.
-crewai = { version = ">=0.51", optional = true, python = "<3.14" }
-llama-index-core = { version = ">=0.10", optional = true }
+# crewai and llama-index-core pull in Pillow (via pdfplumber and
+# llama-index-core) and crewai pulls in filelock (via huggingface-hub). Every
+# Pillow < 13.0.0 is advised (GHSA, 5 critical) and every filelock <= 4.2.0
+# (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92, GHSA-v4x8-3wr5-3wq8); both fixes
+# need Python 3.11. So these two extras install from Python 3.11 only, with the
+# fixed floors below, and the core package keeps Python 3.10.
+crewai = { version = ">=0.51", optional = true, python = ">=3.11,<3.14" }
+llama-index-core = { version = ">=0.10", optional = true, python = ">=3.11" }
+pillow = { version = ">=13.0.0", optional = true, python = ">=3.11" }
+filelock = { version = ">=4.2.1", optional = true, python = ">=3.11" }
 
 # Transitive, via `mcp` -> `pyjwt[crypto]`. Nothing in this tree
 # constrains it, so a resolver is free to pick a version in the
@@ -54,8 +62,8 @@ cryptography = ">=50.0.0"
 [tool.poetry.extras]
 ilp = ["scipy"]
 langchain = ["langchain-core"]
-crewai = ["crewai"]
-llamaindex = ["llama-index-core"]
+crewai = ["crewai", "pillow", "filelock"]
+llamaindex = ["llama-index-core", "pillow"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.3,<10.0.0"
