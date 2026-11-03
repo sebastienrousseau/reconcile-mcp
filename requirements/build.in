@@ -12,4 +12,4 @@ virtualenv>=21.14.13
 # this tree runs on 3.12, so it is compiled for 3.12.
 filelock>=4.2.1
 # certifi PYSEC-2026-4320 (GHSA-6q48-6c7w-9gw2), fixed in 2026.10.19.
-certifi>=2026.10.19
+certifi>=2026.10.23
