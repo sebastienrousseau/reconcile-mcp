@@ -209,7 +209,7 @@ def test_as_crewai_tools_missing_extra_raises(monkeypatch):
         raised = False
     except ImportError as exc:
         raised = True
-        assert "reconcile-mcp[crewai]" in str(exc)
+        assert "pip install crewai" in str(exc)
     assert raised is True
 
 
