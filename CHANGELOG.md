@@ -9,15 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking:** the `crewai` extra. crewai pins `chromadb ~= 1.5.9`, and
+  every chromadb release carries unfixed advisories (GHSA-36p7-vc44-83pf and
+  GHSA-f4j7-r4q5-qw2c, critical; GHSA-xph7-9rjv-w5fr and
+  GHSA-2wm9-hf6c-p5cr, high). `as_crewai_tools()` is unchanged and works
+  with a crewai you install yourself (`pip install crewai`).
+
 ### Security
 
-- The `crewai` and `llamaindex` extras install from Python 3.11 only, and
-  pull `pillow >= 13.0.0` (every earlier Pillow is advised, 5 critical) and,
-  for `crewai`, `filelock >= 4.2.1` (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92,
-  GHSA-v4x8-3wr5-3wq8). Both fixes need Python 3.11; on 3.10 they had resolved
-  Pillow 12.3.0 and filelock 4.1.0. The core package still supports 3.10, and
-  on 3.10 those two extras now install nothing. `crewai` still brings
-  chromadb, for which no fixed release exists.
+- The `llamaindex` extra installs from Python 3.11 only and pulls
+  `pillow >= 13.0.0` (every earlier Pillow is advised, 5 critical); the fix
+  needs Python 3.11, and on 3.10 it had resolved Pillow 12.3.0. The core
+  package still supports 3.10, and on 3.10 that extra now installs nothing.
 - The release tooling (`requirements/build.txt`) floors `filelock >= 4.2.1`
   (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92, GHSA-v4x8-3wr5-3wq8; it pinned
   4.0.10) and `certifi >= 2026.10.19` (PYSEC-2026-4320; it pinned

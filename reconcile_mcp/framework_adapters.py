@@ -114,16 +114,18 @@ def as_crewai_tools() -> list[Any]:
     Returns one ``crewai.tools.CrewStructuredTool`` per registered gateway
     tool, carrying its name, description, JSON input schema and callable.
 
+    CrewAI is not an extra of this package: it pins chromadb, every release
+    of which carries unfixed critical advisories, so installing it is left
+    to the caller.
+
     Raises:
-        ImportError: if CrewAI is not installed
-            (``pip install reconcile-mcp[crewai]``).
+        ImportError: if CrewAI is not installed (``pip install crewai``).
     """
     try:
         from crewai.tools import CrewStructuredTool
     except ImportError as exc:
         raise ImportError(
-            "CrewAI is not installed. Install it with "
-            "`pip install reconcile-mcp[crewai]`."
+            "CrewAI is not installed. Install it with `pip install crewai`."
         ) from exc
 
     return [
