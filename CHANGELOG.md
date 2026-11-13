@@ -7,54 +7,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.8] - 2026-11-13
 
 ### Removed
 
-- **Breaking:** the `crewai` extra. crewai pins `chromadb ~= 1.5.9`, and
-  every chromadb release carries unfixed advisories (GHSA-36p7-vc44-83pf and
+- **Breaking:** the `crewai` extra. `crewai` pins `chromadb ~= 1.5.9`, and
+  every `chromadb` release carries unfixed advisories (GHSA-36p7-vc44-83pf and
   GHSA-f4j7-r4q5-qw2c, critical; GHSA-xph7-9rjv-w5fr and
-  GHSA-2wm9-hf6c-p5cr, high). `as_crewai_tools()` is unchanged and works
-  with a crewai you install yourself (`pip install crewai`).
+  GHSA-2wm9-hf6c-p5cr, high). Removing the extra also keeps
+  `poetry install --only main` in the release SBOM job resolvable across
+  Python 3.10 through 3.14 (#52, #64). `as_crewai_tools()` is unchanged and
+  works with a `crewai` you install yourself (`pip install crewai`).
 
 ### Security
 
 - The `llamaindex` extra installs from Python 3.11 only and pulls
   `pillow >= 13.0.0` (every earlier Pillow is advised, 5 critical); the fix
   needs Python 3.11, and on 3.10 it had resolved Pillow 12.3.0. The core
-  package still supports 3.10, and on 3.10 that extra now installs nothing.
-- The release tooling (`requirements/build.txt`) floors `filelock >= 4.2.1`
-  (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92, GHSA-v4x8-3wr5-3wq8; it pinned
-  4.0.10) and `certifi >= 2026.10.19` (PYSEC-2026-4320; it pinned
-  2026.7.22), and keeps `virtualenv >= 21.14.13` (GHSA-cx6f-vjhg-g3cc).
-  filelock 4.2.1 needs Python 3.11 and only 3.12 jobs install the tree, so
-  it is compiled for 3.12, universally: that restores the pins (cachecontrol
-  among them) a non-universal Dependabot recompile dropped, without which
-  `pip install --require-hashes -r requirements/build.txt` failed.
+  package still supports 3.10, and on 3.10 that extra now installs nothing
+  (#53).
+- The release tooling (`requirements/build.{in,txt}`) floors
+  `filelock >= 4.2.9` (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92,
+  GHSA-v4x8-3wr5-3wq8; it pinned 4.0.10), `certifi >= 2026.10.23`
+  (PYSEC-2026-4320; it pinned 2026.7.22), `dulwich >= 1.2.21`, and
+  `virtualenv >= 21.15.5` (GHSA-cx6f-vjhg-g3cc). `filelock` 4.2.1+ needs
+  Python 3.11 and only 3.12 jobs install the tree, so `requirements/build.txt`
+  is compiled for 3.12 universally with hashes, restoring universal pins such
+  as `cachecontrol` and `backports-zstd` (#46, #47, #48, #52, #56, #58, #59,
+  #63, #66, #67, #69).
 - The release SBOM job points `cyclonedx-py environment` and `pip-licenses`
   at the Poetry venv (`poetry env info --executable`). Run through `poetry
   run`, they described their own interpreter, so the SBOM listed the SBOM
-  tooling instead of the runtime set.
+  tooling instead of the runtime set (#52).
 - `mcp >= 1.30.0, != 2.0.*, != 2.1.*` (GHSA-84m7-p3x7-pcfv), so neither
-  affected range can resolve.
-- `crewai` (optional) is declared for Python < 3.14, the range it supports.
-  Without the marker Poetry could not resolve the project at all, which
-  failed the release SBOM job since 0.0.6.
+  affected range can resolve (#52).
 
 ### Changed
 
-- `requirements/build.in` floors `dulwich >= 1.2.21`, `virtualenv >= 21.15.5`,
-  and `filelock >= 4.2.9` with universal hash-pinned `requirements/build.txt`
-  recompilation (#47, #48, #66, #67, #69).
-- `requirements/sbom.txt` updates `cyclonedx-bom` to 8.0.1 (#68, #70).
-- CI and release workflows update `github/codeql-action` to 4.39.3 and
-  `sigstore/cosign-installer` to 4.1.3 (#65).
+- Added a stable `Test (all)` aggregate check job in CI so branch protection
+  has one required check name across Python matrix updates (#54).
+- `requirements/sbom.txt` updates `cyclonedx-bom` to 8.0.1 with universal
+  hash-pinned compilation (#60, #61, #68, #70).
+- Widened dev dependency bounds for `ruff` (`>=0.1,<0.18`) and `mypy`
+  (`>=1.11,<3.0`) (#57, #62).
+- CI and release workflows update `actions/checkout` to 7.0.1,
+  `actions/setup-python` to 7.1.0, `actions/setup-node` to 7.1.0,
+  `actions/attest-build-provenance` to 4.2.2, `pypa/gh-action-pypi-publish`
+  to 1.14.3, `anchore/sbom-action` to 0.24.3, `actions/upload-artifact` to
+  7.0.2, `ossf/scorecard-action` to 2.5.0, `github/codeql-action` to 4.39.3,
+  and `sigstore/cosign-installer` to 4.1.3 (#43, #55, #65).
 
 ### Fixed
 
 - Reworded cross-tool imperatives across all 10 MCP tool descriptions into
-  declarative scope boundaries so each tool governs only itself and clears
-  `passmcp` `catalog.text.shadowing` checks.
+  declarative scope boundaries with a catalogue vocabulary regression test so
+  each tool governs only itself and reaches `passmcp` `99.0625/100` (Grade
+  `A`) conformance (#71).
 
 ## [0.0.7] - 2026-10-04
 
@@ -183,6 +191,7 @@ Brings this repository onto the suite conformance gate. It had no
 
 - CI lints, formats and runs `benches/` alongside everything else.
 
+[0.0.8]: https://github.com/sebastienrousseau/reconcile-mcp/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/sebastienrousseau/reconcile-mcp/releases/tag/v0.0.7
 [0.0.6]: https://github.com/sebastienrousseau/reconcile-mcp/releases/tag/v0.0.6
 [0.0.5]: https://github.com/sebastienrousseau/reconcile-mcp/releases/tag/v0.0.5
