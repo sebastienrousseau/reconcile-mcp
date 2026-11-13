@@ -43,8 +43,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `requirements/build.in` floors `dulwich >= 1.2.19` (it pinned 1.2.17), in
-  place of Dependabot #47 and #48.
+- `requirements/build.in` floors `dulwich >= 1.2.21`, `virtualenv >= 21.15.5`,
+  and `filelock >= 4.2.9` with universal hash-pinned `requirements/build.txt`
+  recompilation (#47, #48, #66, #67, #69).
+- `requirements/sbom.txt` updates `cyclonedx-bom` to 8.0.1 (#68, #70).
+- CI and release workflows update `github/codeql-action` to 4.39.3 and
+  `sigstore/cosign-installer` to 4.1.3 (#65).
+
+### Fixed
+
+- Reworded cross-tool imperatives across all 10 MCP tool descriptions into
+  declarative scope boundaries so each tool governs only itself and clears
+  `passmcp` `catalog.text.shadowing` checks.
 
 ## [0.0.7] - 2026-10-04
 
